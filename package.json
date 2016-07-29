@@ -1,0 +1,32 @@
+{
+  "name": "now-fleet",
+  "version": "0.0.1",
+  "description": "Helps with multiple microservice deployment",
+  "main": "index.js",
+  "bin": {
+    "now-fleet-deploy": "deploy.js",
+    "now-fleet-discover": "discover.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vigour-io/now-fleet.git"
+  },
+  "keywords": [
+    "now",
+    "npm",
+    "deploy",
+    "discover"
+  ],
+  "author": "Mustafa Dokumacı",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/vigour-io/now-fleet/issues"
+  },
+  "homepage": "https://github.com/vigour-io/now-fleet#readme",
+  "dependencies": {
+    "zeit-client-api": "^0.4.0"
+  }
+}
