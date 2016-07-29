@@ -4,8 +4,8 @@
   "description": "Helps with multiple microservice deployment",
   "main": "index.js",
   "bin": {
-    "now-fleet-deploy": "deploy.js",
-    "now-fleet-discover": "discover.js"
+    "now-fleet-deploy": "bin/deploy.js",
+    "now-fleet-discover": "bin/discover.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
