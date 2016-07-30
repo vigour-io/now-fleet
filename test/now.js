@@ -35,20 +35,20 @@ test('now client - get deployments list', (t) => {
 
 test('now client - get package.json', (t) => {
   stub
-    .withArgs(Object.assign({path: '/now/deployments/uid/files'}, https_request_options))
+    .withArgs(Object.assign({path: '/now/deployments/deployment-uid/files'}, https_request_options))
     .returns({end: () => {}})
     .callsArgWith(1, {on: (e, cb) => {
       cb(e == 'data' && '[{"name": "package.json", "uid": "pkg-uid"}]')
     }})
 
   stub
-    .withArgs(Object.assign({path: '/now/deployments/uid/files/pkg-uid'}, https_request_options))
+    .withArgs(Object.assign({path: '/now/deployments/deployment-uid/files/pkg-uid'}, https_request_options))
     .returns({end: () => {}})
     .callsArgWith(1, {on: (e, cb) => {
       cb(e == 'data' && '{"version": "1.1.1"}')
     }})
 
-  now.get_pkg('uid', (pkg) => {
+  now.get_pkg('deployment-uid', (pkg) => {
     t.equal(pkg.constructor, Object, 'package.json is an object')
     t.pass(pkg.version, 'with a version')
     t.end()
