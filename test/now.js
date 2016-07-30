@@ -2,10 +2,8 @@
 const test = require('tape')
 const sinon = require('sinon')
 const https = require('https')
-// allways use lib/index.js as a main
-const now = require('../')
-// standard does not allow bla_bla variable names
-// use camelCase ;)
+
+const now = require('../lib/now')
 
 const httpsRequestOptions = {
   hostname: 'api.zeit.co',
