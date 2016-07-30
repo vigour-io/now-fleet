@@ -1,14 +1,19 @@
 {
   "name": "now-fleet",
   "version": "0.0.1",
-  "description": "Helps with multiple microservice deployment",
-  "main": "index.js",
+  "description": "Helps with multiple microservice deployments",
+  "main": "./lib/index.js",
   "bin": {
     "now-fleet-deploy": "bin/deploy.js",
     "now-fleet-discover": "bin/discover.js"
   },
   "scripts": {
-    "test": "node test/*"
+    "test": "(ducktape; node test/*) | tap-difflet && standard",
+    "watch": "nodemon test | tap-difflet",
+    "cover": "istanbul cover --report none --print detail test/*",
+    "docs": "node_modules/vigour-doc/bin/vdoc",
+    "travis": "npm run cover -s && istanbul report lcov && ((cat coverage/lcov.info | coveralls) || exit 0) && standard",
+    "perf-browser": "budo ./test/performance/index.js -p 8080 --live"
   },
   "repository": {
     "type": "git",
@@ -30,6 +35,13 @@
   },
   "devDependencies": {
     "tape": "^4.4.0",
-    "sinon": "^1.17.0"
+    "sinon": "^1.17.0",
+    "ducktape": "^1.0.0",
+    "tap-difflet": "0.4.0",
+    "nodemon": "^1.9.1",
+    "coveralls": "^2.11.9",
+    "istanbul": "^0.4.3",
+    "standard": "^7.0.1",
+    "pre-commit": "^1.1.3"
   }
 }
