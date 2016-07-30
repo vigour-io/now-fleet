@@ -23,7 +23,7 @@ test('now client - get deployments list', (t) => {
     .withArgs(Object.assign({path: '/now/deployments'}, https_request_options))
     .returns({end: () => {}})
     .callsArgWith(1, {on: (e, cb) => {
-      cb(e == 'data' ? '{"deployments": []}' : null)
+      cb(e == 'data' && '{"deployments": []}')
     }})
 
   now.get_deployments((list) => {
@@ -38,14 +38,14 @@ test('now client - get package.json', (t) => {
     .withArgs(Object.assign({path: '/now/deployments/uid/files'}, https_request_options))
     .returns({end: () => {}})
     .callsArgWith(1, {on: (e, cb) => {
-      cb(e == 'data' ? '[{"name": "package.json", "uid": "pkg-uid"}]' : null)
+      cb(e == 'data' && '[{"name": "package.json", "uid": "pkg-uid"}]')
     }})
 
   stub
     .withArgs(Object.assign({path: '/now/deployments/uid/files/pkg-uid'}, https_request_options))
     .returns({end: () => {}})
     .callsArgWith(1, {on: (e, cb) => {
-      cb(e == 'data' ? '{"version": "1.1.1"}' : null)
+      cb(e == 'data' && '{"version": "1.1.1"}')
     }})
 
   now.get_pkg('uid', (pkg) => {
