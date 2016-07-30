@@ -56,8 +56,11 @@ test('now client - get package.json', (t) => {
 
   now.get_pkg('deployment-uid', (pkg) => {
     t.equal(pkg.constructor, Object, 'package.json is an object')
-    t.pass(pkg.version, 'with a version')
+    t.ok(pkg.version, 'with a version')
     t.end()
-    https.request.restore()
   })
+})
+
+test.onFinish(() => {
+  https.request.restore()
 })
