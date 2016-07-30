@@ -1,4 +1,5 @@
 'use strict'
+
 const test = require('tape')
 const sinon = require('sinon')
 const https = require('https')

@@ -1,4 +1,5 @@
 'use strict'
+
 const test = require('tape')
 const sinon = require('sinon')
 const cp = require('child_process')
