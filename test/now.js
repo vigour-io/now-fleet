@@ -20,7 +20,9 @@ now.set_token('API-TOKEN')
 
 test('now client - get deployments list', (t) => {
   stub
-    .withArgs(Object.assign({path: '/now/deployments'}, https_request_options))
+    .withArgs(Object.assign({
+      path: '/now/deployments'
+    }, https_request_options))
     .returns({end: () => {}})
     .callsArgWith(1, {on: (e, cb) => {
       cb(e == 'data' && '{"deployments": []}')
@@ -35,14 +37,18 @@ test('now client - get deployments list', (t) => {
 
 test('now client - get package.json', (t) => {
   stub
-    .withArgs(Object.assign({path: '/now/deployments/deployment-uid/files'}, https_request_options))
+    .withArgs(Object.assign({
+      path: '/now/deployments/deployment-uid/files'
+    }, https_request_options))
     .returns({end: () => {}})
     .callsArgWith(1, {on: (e, cb) => {
       cb(e == 'data' && '[{"name": "package.json", "uid": "pkg-uid"}]')
     }})
 
   stub
-    .withArgs(Object.assign({path: '/now/deployments/deployment-uid/files/pkg-uid'}, https_request_options))
+    .withArgs(Object.assign({
+      path: '/now/deployments/deployment-uid/files/pkg-uid'
+    }, https_request_options))
     .returns({end: () => {}})
     .callsArgWith(1, {on: (e, cb) => {
       cb(e == 'data' && '{"version": "1.1.1"}')
