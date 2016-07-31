@@ -8,18 +8,18 @@
 <!-- VDOC END -->
 An api to make it easy to deploy complete infrastructures of microservices using now
 
-####Usage
+#### Usage
 ```javascript
-const now = require('now-fleet')
+const fleet = require('now-fleet')
 
 // set api token
-now.setToken('API-TOKEN')
+fleet.now.setToken('API-TOKEN')
 
-now.getDeployments((list) => {
+flett.now.getDeployments((list) => {
   console.log('returns a list of deployments', list)
 })
 
-now.getPkg('deployment-uid', (pkg) => {
- console.log('gets the pckg', pkg)
+fleet.now.getPkg('deployment-uid', (pkg) => {
+  console.log('gets the package.json', pkg)
 })
 ```
