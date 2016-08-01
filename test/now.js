@@ -19,7 +19,7 @@ const stub = sinon.stub(https, 'request')
 
 now.setToken('API-TOKEN')
 
-test('now client - get deployments list', (t) => {
+test('now client - get deployments list', t => {
   stub
     .withArgs(Object.assign({
       path: '/now/deployments'
@@ -29,14 +29,14 @@ test('now client - get deployments list', (t) => {
       cb(e === 'data' && '{"deployments": []}')
     }})
 
-  now.getDeployments((list) => {
+  now.getDeployments(list => {
     t.equal(list.constructor, Array, 'deployments is an array')
     t.equal(list.length, 0, 'with zero items')
     t.end()
   })
 })
 
-test('now client - get package.json', (t) => {
+test('now client - get package.json', t => {
   stub
     .withArgs(Object.assign({
       path: '/now/deployments/deployment-uid/files'
@@ -55,7 +55,7 @@ test('now client - get package.json', (t) => {
       cb(e === 'data' && '{"version": "1.1.1"}')
     }})
 
-  now.getPkg('deployment-uid', (pkg) => {
+  now.getPkg('deployment-uid', pkg => {
     t.equal(pkg.constructor, Object, 'package.json is an object')
     t.ok(pkg.version, 'with a version')
     t.end()

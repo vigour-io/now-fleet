@@ -8,7 +8,7 @@ const npm = require('../lib/npm')
 
 const stub = sinon.stub(cp, 'exec')
 
-test('npm client - get latest version', (t) => {
+test('npm client - get latest version', t => {
   stub
     .withArgs('npm v sample@^1.0.0 version')
     .returns({
@@ -18,13 +18,13 @@ test('npm client - get latest version', (t) => {
       on: (e, cb) => cb()
     })
 
-  npm.getLastVersion('sample@^1.0.0', (version) => {
+  npm.getLastVersion('sample@^1.0.0', version => {
     t.equal(version, '1.3.3', 'latest version is 1.3.3')
     t.end()
   })
 })
 
-test('npm client - get services', (t) => {
+test('npm client - get services', t => {
   stub
     .withArgs('npm v sample@1.3.3 services')
     .returns({
@@ -34,7 +34,7 @@ test('npm client - get services', (t) => {
       on: (e, cb) => cb()
     })
 
-  npm.getServices('sample@1.3.3', (services) => {
+  npm.getServices('sample@1.3.3', services => {
     t.equal(services.constructor, Object, 'services is an object')
     t.equal(services.sample2, '^2.0.0', 'sample2@^2.0.0 is a service dependency')
     t.end()
