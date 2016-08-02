@@ -4,8 +4,7 @@ const test = require('tape')
 const sinon = require('sinon')
 const cp = require('child_process')
 
-const Npm = require('../lib/npm')
-const npm = new Npm()
+const npm = require('../lib/npm')
 
 const stub = sinon.stub(cp, 'exec')
 
