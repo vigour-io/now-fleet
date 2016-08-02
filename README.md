@@ -13,13 +13,15 @@ An api to make it easy to deploy complete infrastructures of microservices using
 const fleet = require('now-fleet')
 
 // set api token
-fleet.now.setToken('API-TOKEN')
+const now = new fleet.Now('API-TOKEN')
 
-flett.now.getDeployments((list) => {
-  console.log('returns a list of deployments', list)
-})
+now.getDeployments()
+  .then(list => {
+    console.log('returns a list of deployments', list)
+  })
 
-fleet.now.getPkg('deployment-uid', (pkg) => {
-  console.log('gets the package.json', pkg)
-})
+now.getPkg('deployment-uid')
+  .then(pkg => {
+    console.log('gets the package.json', pkg)
+  })
 ```
