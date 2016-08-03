@@ -17,6 +17,23 @@ const httpsRequestOptions = {
 
 const request = sinon.stub(https, 'request')
 
+test('now client - catch connection error', t => {
+  request
+    .withArgs(Object.assign({
+      path: '/now/deployments'
+    }, httpsRequestOptions))
+    .returns({end: () => {}, on: (e, cb) => {
+      cb('connection error')
+    }})
+
+  now.setToken('API-TOKEN')
+  now.getDeployments()
+    .catch(error => {
+      t.equal(error, 'connection error', 'connection error caught')
+      t.end()
+    })
+})
+
 test('now client - get deployments list', t => {
   request
     .withArgs(Object.assign({

@@ -2,3 +2,4 @@
 
 require('./now')
 require('./npm')
+require('./services')

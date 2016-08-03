@@ -8,6 +8,18 @@ const npm = require('../lib/npm')
 
 const exec = sinon.stub(cp, 'exec')
 
+test('npm client - catch cli error', t => {
+  exec
+    .withArgs('npm v sample@^1.0.0 version')
+    .callsArgWith(2, 'cli error')
+
+  npm.getLastVersion('sample@^1.0.0')
+    .catch(error => {
+      t.equal(error, 'cli error', 'cli error caught')
+      t.end()
+    })
+})
+
 test('npm client - get latest version', t => {
   exec
     .withArgs('npm v sample@^1.0.0 version')
