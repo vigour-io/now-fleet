@@ -1,9 +1,19 @@
 # .travis.yml
 language: node_js
-node_js:
-  - '5.4'
-  - '4.4'
-  - '6.2'
-script: npm run travis
+git:
+  depth: 1
+matrix:
+  include:
+  - node_js: '6.3'
+    script: npm run travis
+before_install:
+  - echo "//registry.npmjs.org/:_authToken=\${NPM_TOKEN}" > .npmrc
 notifications:
   email: false
+deploy:
+  - provider: npm
+    email: jim@vigour.io
+    api_key: ${NPM_TOKEN}
+    on:
+      branch: master
+      tags: true
