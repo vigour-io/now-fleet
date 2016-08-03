@@ -6,10 +6,10 @@ const cp = require('child_process')
 
 const npm = require('../lib/npm')
 
-const stub = sinon.stub(cp, 'exec')
+const exec = sinon.stub(cp, 'exec')
 
 test('npm client - get latest version', t => {
-  stub
+  exec
     .withArgs('npm v sample@^1.0.0 version')
     .callsArgWith(2, null, '\nsample@1.1.1 \'1.1.1\'\nsample@1.2.2 \'1.2.2\'\nsample@1.3.3 \'1.3.3\'\n')
 
@@ -22,7 +22,7 @@ test('npm client - get latest version', t => {
 })
 
 test('npm client - get services', t => {
-  stub
+  exec
     .withArgs('npm v sample@1.3.3 services')
     .callsArgWith(2, null, '\n{"sample2": "^2.0.0"}\n')
 
@@ -32,4 +32,8 @@ test('npm client - get services', t => {
       t.equal(services.sample2, '^2.0.0', 'sample2@^2.0.0 is a service dependency')
       t.end()
     })
+})
+
+test.onFinish(() => {
+  cp.exec.restore()
 })

@@ -4,8 +4,7 @@ const test = require('tape')
 const sinon = require('sinon')
 const https = require('https')
 
-const Now = require('../lib/now')
-const now = new Now('API-TOKEN')
+const now = require('../lib/now')
 
 const httpsRequestOptions = {
   hostname: 'api.zeit.co',
@@ -16,10 +15,10 @@ const httpsRequestOptions = {
   }
 }
 
-const stub = sinon.stub(https, 'request')
+const request = sinon.stub(https, 'request')
 
 test('now client - get deployments list', t => {
-  stub
+  request
     .withArgs(Object.assign({
       path: '/now/deployments'
     }, httpsRequestOptions))
@@ -28,6 +27,7 @@ test('now client - get deployments list', t => {
       cb(e === 'data' && '{"deployments": []}')
     }})
 
+  now.setToken('API-TOKEN')
   now.getDeployments()
     .then(list => {
       t.equal(list.constructor, Array, 'deployments is an array')
@@ -37,7 +37,7 @@ test('now client - get deployments list', t => {
 })
 
 test('now client - get package.json', t => {
-  stub
+  request
     .withArgs(Object.assign({
       path: '/now/deployments/deployment-uid/files'
     }, httpsRequestOptions))
@@ -46,7 +46,7 @@ test('now client - get package.json', t => {
       cb(e === 'data' && '[{"name": "package.json", "uid": "pkg-uid"}]')
     }})
 
-  stub
+  request
     .withArgs(Object.assign({
       path: '/now/deployments/deployment-uid/files/pkg-uid'
     }, httpsRequestOptions))
@@ -55,10 +55,11 @@ test('now client - get package.json', t => {
       cb(e === 'data' && '{"version": "1.1.1"}')
     }})
 
+  now.setToken('API-TOKEN')
   now.getPkg('deployment-uid')
     .then(pkg => {
       t.equal(pkg.constructor, Object, 'package.json is an object')
-      t.ok(pkg.version, 'with a version')
+      t.equal(pkg.version, '1.1.1', 'version is 1.1.1')
       t.end()
     })
 })
