@@ -9,22 +9,21 @@ const npm = require('../lib/npm')
 
 const services = new Services()
 
-test('services - find last deployments', t => {
-  const deployments = [
-    { uid: 1, name: 's1', url: 'u1.sh', created: 11 }, // v1
-    { uid: 2, name: 's1', url: 'u2.sh', created: 12 }, // v1
-    { uid: 3, name: 's1', url: 'u3.sh', created: 13 }, // v1
-    { uid: 4, name: 's1', url: 'u4.sh', created: 21 }, // v2
-    { uid: 5, name: 's1', url: 'u5.sh', created: 22 }, // v2
-    { uid: 6, name: 's2', url: 'u6.sh', created: 11 }, // v1
-    { uid: 7, name: 's2', url: 'u7.sh', created: 21 }, // v2
-    { uid: 8, name: 's2', url: 'u8.sh', created: 22 }, // v2
-    { uid: 9, name: 's3', url: 'u9.sh', created: 11 }, // v1
-    { uid: 10, name: 's4', url: 'u10.sh', created: 11 } // v1
-  ]
+const deployments = [
+  { uid: 1, name: 's1', url: 'u1.sh', created: 11 }, // v1
+  { uid: 2, name: 's1', url: 'u2.sh', created: 12 }, // v1
+  { uid: 3, name: 's1', url: 'u3.sh', created: 13 }, // v1
+  { uid: 4, name: 's1', url: 'u4.sh', created: 21 }, // v2
+  { uid: 5, name: 's1', url: 'u5.sh', created: 22 }, // v2
+  { uid: 6, name: 's2', url: 'u6.sh', created: 11 }, // v1
+  { uid: 7, name: 's2', url: 'u7.sh', created: 21 }, // v2
+  { uid: 8, name: 's2', url: 'u8.sh', created: 22 }, // v2
+  { uid: 9, name: 's3', url: 'u9.sh', created: 11 }, // v1
+  { uid: 10, name: 's4', url: 'u10.sh', created: 11 } // v1
+]
 
+function stubGetPkg () {
   const getPkg = sinon.stub(now, 'getPkg')
-
   getPkg.withArgs(1).returns(Promise.resolve({ version: '1' }))
   getPkg.withArgs(2).returns(Promise.resolve({ version: '1' }))
   getPkg.withArgs(3).returns(Promise.resolve({ version: '1' }))
@@ -35,6 +34,10 @@ test('services - find last deployments', t => {
   getPkg.withArgs(8).returns(Promise.resolve({ version: '2' }))
   getPkg.withArgs(9).returns(Promise.resolve({ version: '1' }))
   getPkg.withArgs(10).returns(Promise.resolve({ version: '1' }))
+}
+
+test('services - find last deployments', t => {
+  stubGetPkg()
 
   services.setDeployments(deployments)
     .then(services.findLastDeployments.bind(services))
@@ -52,13 +55,15 @@ test('services - find last deployments', t => {
         's4': 11
       }, 'last deployments are as expected')
       t.end()
+
+      now.getPkg.restore()
     })
 })
 
 test('services - prepare flat services list', t => {
   sinon.stub(npm, 'getLastVersion', v => Promise.resolve(v.split('@').pop().slice(1)))
-  const getServices = sinon.stub(npm, 'getServices')
 
+  const getServices = sinon.stub(npm, 'getServices')
   getServices.withArgs('s2@2').returns(Promise.resolve({}))
   getServices.withArgs('s3@1').returns(Promise.resolve({ 's4': '^2' }))
   getServices.withArgs('s4@2').returns(Promise.resolve({ 's2': '^2' }))
@@ -109,8 +114,8 @@ test('services - prepare flat services list', t => {
 
 test('services - prepare flat services list for circular dependency', t => {
   sinon.stub(npm, 'getLastVersion', v => Promise.resolve(v.split('@').pop().slice(1)))
-  const getServices = sinon.stub(npm, 'getServices')
 
+  const getServices = sinon.stub(npm, 'getServices')
   getServices.withArgs('s2@3').returns(Promise.resolve({ 's3': '^1' }))
   getServices.withArgs('s3@1').returns(Promise.resolve({ 's4': '^1' }))
   getServices.withArgs('s4@1').returns(Promise.resolve({ 's1': '^1' }))
@@ -149,6 +154,35 @@ test('services - prepare flat services list for circular dependency', t => {
     })
 })
 
-test.onFinish(() => {
-  now.getPkg.restore()
+test('services - deploy all with error', t => {
+  const getDeployments = sinon.stub(now, 'getDeployments')
+  getDeployments.returns(Promise.resolve(deployments))
+
+  stubGetPkg()
+
+  const getPkg = sinon.stub(Services, 'getPkg')
+  getPkg.withArgs('directory').returns({
+    name: 's1', version: 's2',
+    services: { 's2': '^2', 's3': '^1' }
+  })
+
+  sinon.stub(npm, 'getLastVersion', v => Promise.resolve(v.split('@').pop().slice(1)))
+
+  const getServices = sinon.stub(npm, 'getServices')
+  getServices.withArgs('s2@2').returns(Promise.resolve({}))
+  getServices.withArgs('s3@1').returns(Promise.resolve({ 's4': '^2' }))
+  getServices.withArgs('s4@2').returns(Promise.resolve({ 's2': '^2', 's1': '^1' }))
+  getServices.withArgs('s1@1').returns(Promise.resolve({}))
+
+  services.servicesFlat = []
+  services.deployAll('directory')
+    .catch((error) => {
+      t.equal(error.message, 'Can not depend on a different version of root module: s1@1', 'error caught')
+      t.end()
+
+      now.getDeployments.restore()
+      now.getPkg.restore()
+      npm.getLastVersion.restore()
+      npm.getServices.restore()
+    })
 })
