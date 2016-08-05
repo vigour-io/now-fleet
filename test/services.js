@@ -2,6 +2,8 @@
 
 const test = require('tape')
 const sinon = require('sinon')
+const path = require('path')
+const fs = require('fs')
 
 const Services = require('../lib/services')
 const now = require('../lib/now')
@@ -195,12 +197,12 @@ test('services - deploy all successfuly', t => {
 
   stubGetPkg()
 
-  const getPkg = sinon.stub(Services, 'getPkg')
-  getPkg.withArgs('directory').returns({
+  const readFileSync = sinon.stub(fs, 'readFileSync')
+  readFileSync.withArgs(path.join('directory', 'package.json')).returns(JSON.stringify({
     name: 's1', version: '2',
     services: { 's2': '^2', 's3': '^1' }
-  })
-  getPkg.returns({})
+  }))
+  readFileSync.returns('{}')
 
   sinon.stub(npm, 'getLastVersion', v => Promise.resolve(v.split('@').pop().slice(1)))
 
@@ -209,9 +211,9 @@ test('services - deploy all successfuly', t => {
   getServices.withArgs('s3@1').returns(Promise.resolve({ 's4': '^2' }))
   getServices.withArgs('s4@2').returns(Promise.resolve({ 's2': '^2' }))
 
-  var setPkgArgs = {}
-  sinon.stub(Services, 'setPkg', (dir, pkg) => {
-    setPkgArgs[dir] = Object.assign({}, pkg)
+  var writeFileSyncArgs = {}
+  sinon.stub(fs, 'writeFileSync', (file, data) => {
+    writeFileSyncArgs[path.parse(file).dir] = JSON.parse(data)
   })
 
   var commandArgs = {}
@@ -228,7 +230,7 @@ test('services - deploy all successfuly', t => {
   services.servicesFlat = []
   services.deployAll('directory')
     .then(() => {
-      t.deepEqual(setPkgArgs, {
+      t.deepEqual(writeFileSyncArgs, {
         'directory': {
           name: 's1', version: '2',
           services: { 's2': '^2', 's3': '^1' },
@@ -241,7 +243,7 @@ test('services - deploy all successfuly', t => {
         'directory/node_modules/s4': { _services: { 's2': { version: '2', url: 'u8.sh' } } }
       })
       t.deepEqual(commandArgs, {
-        'directory': [ 'npm install s3@1', 'npm install s4@2', 'npm install', 'now' ],
+        'directory': [ 'npm install', 'now', 'npm install s3@1', 'npm install s4@2' ],
         'directory/node_modules/s3': [ 'npm install', 'now' ],
         'directory/node_modules/s4': [ 'npm install', 'now' ],
         'no-cwd': [ 'rm -r directory/node_modules/s3', 'rm -r directory/node_modules/s4' ]
@@ -252,8 +254,8 @@ test('services - deploy all successfuly', t => {
       now.getPkg.restore()
       npm.getLastVersion.restore()
       npm.getServices.restore()
-      Services.getPkg.restore()
-      Services.setPkg.restore()
+      fs.readFileSync.restore()
+      fs.writeFileSync.restore()
       command.run.restore()
     })
 })
