@@ -6,6 +6,7 @@ const sinon = require('sinon')
 const Services = require('../lib/services')
 const now = require('../lib/now')
 const npm = require('../lib/npm')
+const command = require('../lib/command')
 
 const services = new Services()
 
@@ -184,5 +185,75 @@ test('services - deploy all with error', t => {
       now.getPkg.restore()
       npm.getLastVersion.restore()
       npm.getServices.restore()
+      Services.getPkg.restore()
+    })
+})
+
+test('services - deploy all successfuly', t => {
+  const getDeployments = sinon.stub(now, 'getDeployments')
+  getDeployments.returns(Promise.resolve(deployments))
+
+  stubGetPkg()
+
+  const getPkg = sinon.stub(Services, 'getPkg')
+  getPkg.withArgs('directory').returns({
+    name: 's1', version: '2',
+    services: { 's2': '^2', 's3': '^1' }
+  })
+  getPkg.returns({})
+
+  sinon.stub(npm, 'getLastVersion', v => Promise.resolve(v.split('@').pop().slice(1)))
+
+  const getServices = sinon.stub(npm, 'getServices')
+  getServices.withArgs('s2@2').returns(Promise.resolve({}))
+  getServices.withArgs('s3@1').returns(Promise.resolve({ 's4': '^2' }))
+  getServices.withArgs('s4@2').returns(Promise.resolve({ 's2': '^2' }))
+
+  var setPkgArgs = {}
+  sinon.stub(Services, 'setPkg', (dir, pkg) => {
+    setPkgArgs[dir] = Object.assign({}, pkg)
+  })
+
+  var commandArgs = {}
+  sinon.stub(command, 'run', function (cmd, cwd) {
+    cwd = cwd || 'no-cwd'
+    if (!commandArgs[cwd]) {
+      commandArgs[cwd] = []
+    }
+    commandArgs[cwd].push(cmd)
+
+    return Promise.resolve()
+  })
+
+  services.servicesFlat = []
+  services.deployAll('directory')
+    .then(() => {
+      t.deepEqual(setPkgArgs, {
+        'directory': {
+          name: 's1', version: '2',
+          services: { 's2': '^2', 's3': '^1' },
+          _services: {
+            's2': { version: '2', url: 'u8.sh' },
+            's3': { version: '1', url: 11 }
+          }
+        },
+        'directory/node_modules/s3': { _services: { 's4': { version: '2', url: 11 } } },
+        'directory/node_modules/s4': { _services: { 's2': { version: '2', url: 'u8.sh' } } }
+      })
+      t.deepEqual(commandArgs, {
+        'directory': [ 'npm install s3@1', 'npm install s4@2', 'npm install', 'now' ],
+        'directory/node_modules/s3': [ 'npm install', 'now' ],
+        'directory/node_modules/s4': [ 'npm install', 'now' ],
+        'no-cwd': [ 'rm -r directory/node_modules/s3', 'rm -r directory/node_modules/s4' ]
+      })
+      t.end()
+
+      now.getDeployments.restore()
+      now.getPkg.restore()
+      npm.getLastVersion.restore()
+      npm.getServices.restore()
+      Services.getPkg.restore()
+      Services.setPkg.restore()
+      command.run.restore()
     })
 })
