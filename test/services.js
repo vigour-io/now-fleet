@@ -37,13 +37,15 @@ function stubGetPkg () {
   getPkg.withArgs(8).returns(Promise.resolve({ version: '2' }))
   getPkg.withArgs(9).returns(Promise.resolve({ version: '1' }))
   getPkg.withArgs(10).returns(Promise.resolve({ version: '1' }))
+  getPkg.withArgs(11).returns(Promise.resolve({ version: '2' }))
+  getPkg.withArgs(12).returns(Promise.resolve({ version: '1' }))
 }
 
 test('services - find last deployments', t => {
   stubGetPkg()
 
-  services.setDeployments(deployments)
-    .then(services.findLastDeployments.bind(services))
+  services.deployments = deployments
+  services.findLastDeployments()
     .then(() => {
       t.deepEqual(services.lastDeployments, {
         's1@1': { uid: 3, name: 's1', url: 'u3.sh', created: 13 },
@@ -235,12 +237,12 @@ test('services - deploy all successfuly', t => {
           name: 's1', version: '2',
           services: { 's2': '^2', 's3': '^1' },
           _services: {
-            's2': { version: '2', url: 'u8.sh' },
-            's3': { version: '1', url: 11 }
+            's2': 'u8.sh',
+            's3': { version: '1', lastDeploy: 11 }
           }
         },
-        'directory/node_modules/s3': { _services: { 's4': { version: '2', url: 11 } } },
-        'directory/node_modules/s4': { _services: { 's2': { version: '2', url: 'u8.sh' } } }
+        'directory/node_modules/s3': { _services: { 's4': { version: '2', lastDeploy: 11 } } },
+        'directory/node_modules/s4': { _services: { 's2': 'u8.sh' } }
       })
       t.deepEqual(commandArgs, {
         'directory': [ 'npm install', 'now', 'npm install s3@1', 'npm install s4@2' ],
@@ -257,5 +259,49 @@ test('services - deploy all successfuly', t => {
       fs.readFileSync.restore()
       fs.writeFileSync.restore()
       command.run.restore()
+    })
+})
+
+test('services - discover services', t => {
+  const s4New = { uid: 11, name: 's4', url: 'u11.sh', created: 12 }
+  const s3New = { uid: 12, name: 's3', url: 'u12.sh', created: 12 }
+
+  const getDeployments = sinon.stub(now, 'getDeployments')
+  getDeployments.onFirstCall().returns(Promise.resolve(deployments.concat(s4New)))
+  getDeployments.onSecondCall().returns(Promise.resolve(deployments.concat(s4New, s3New)))
+
+  stubGetPkg()
+
+  var pkg = {
+    _services: {
+      's2': 'u8.sh',
+      's3': { version: '1', lastDeploy: 11 },
+      's4': { version: '2', lastDeploy: 11 }
+    }
+  }
+  const readFileSync = sinon.stub(fs, 'readFileSync')
+  readFileSync.withArgs(path.join('directory', 'package.json')).returns(JSON.stringify(pkg))
+
+  sinon.stub(fs, 'writeFileSync', (file, data) => {
+    if (file === path.join('directory', 'package.json')) {
+      pkg = JSON.parse(data)
+    }
+  })
+
+  services.pkg = {}
+  services.discoverAll('directory', 0)
+    .then(() => {
+      t.equal(services.deployments.length, 12, 'should have 12 deployments')
+      t.deepEqual(pkg._services, {
+        's2': 'u8.sh',
+        's3': 'u12.sh',
+        's4': 'u11.sh'
+      }, 'services should be discovered as expected')
+      t.end()
+
+      now.getDeployments.restore()
+      now.getPkg.restore()
+      fs.readFileSync.restore()
+      fs.writeFileSync.restore()
     })
 })
