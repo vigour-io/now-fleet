@@ -1,6 +1,6 @@
 {
   "name": "now-fleet",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Helps with multiple microservice deployments",
   "main": "./lib/index.js",
   "bin": {
@@ -31,8 +31,7 @@
     "url": "https://github.com/vigour-io/now-fleet/issues"
   },
   "homepage": "https://github.com/vigour-io/now-fleet#readme",
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
     "tape": "^4.4.0",
     "sinon": "^1.17.0",
