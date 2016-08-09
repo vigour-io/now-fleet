@@ -1,6 +1,6 @@
 {
   "name": "now-fleet",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Helps with multiple microservice deployments",
   "main": "./lib/index.js",
   "bin": {
