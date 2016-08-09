@@ -53,6 +53,33 @@ test('now client - get deployments list', t => {
     })
 })
 
+test('now client - get package.json not a json', t => {
+  request
+    .withArgs(Object.assign({
+      path: '/now/deployments/deployment-uid/files'
+    }, httpsRequestOptions))
+    .returns({end: () => {}})
+    .callsArgWith(1, {on: (e, cb) => {
+      cb(e === 'data' && '[{"name": "package.json", "uid": "pkg-uid"}]')
+    }})
+
+  request
+    .withArgs(Object.assign({
+      path: '/now/deployments/deployment-uid/files/pkg-uid'
+    }, httpsRequestOptions))
+    .returns({end: () => {}})
+    .callsArgWith(1, {on: (e, cb) => {
+      cb(e === 'data' && 'not a valid json')
+    }})
+
+  now.setToken('API-TOKEN')
+  now.getPkg('deployment-uid')
+    .then(pkg => {
+      t.equal(pkg.constructor, Object, 'package.json is an object')
+      t.end()
+    })
+})
+
 test('now client - get package.json', t => {
   request
     .withArgs(Object.assign({

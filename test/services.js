@@ -23,7 +23,8 @@ const deployments = [
   { uid: 7, name: 's2', url: 'u7.sh', created: 21 }, // v2
   { uid: 8, name: 's2', url: 'u8.sh', created: 22 }, // v2
   { uid: 9, name: 's3', url: 'u9.sh', created: 11 }, // v1
-  { uid: 10, name: 's4', url: 'u10.sh', created: 11 } // v1
+  { uid: 10, name: 's4', url: 'u10.sh', created: 11 }, // v1
+  { uid: 99, name: 's10', url: 'u99.sh', created: 11 } // no v
 ]
 
 function stubGetPkg () {
@@ -40,6 +41,7 @@ function stubGetPkg () {
   getPkg.withArgs(10).returns(Promise.resolve({ version: '1' }))
   getPkg.withArgs(11).returns(Promise.resolve({ version: '2' }))
   getPkg.withArgs(12).returns(Promise.resolve({ version: '1' }))
+  getPkg.withArgs(99).returns(Promise.resolve({}))
 }
 
 test('services - find last deployments', t => {
@@ -294,7 +296,7 @@ test('services - discover services', t => {
   services.pkg = {}
   services.discoverAll('directory', 0)
     .then(() => {
-      t.equal(services.deployments.length, 12, 'should have 12 deployments')
+      t.equal(services.deployments.length, 13, 'find 13 deployments')
       t.deepEqual(pkg._services, {
         's2': 'u8.sh',
         's3': 'u12.sh',
