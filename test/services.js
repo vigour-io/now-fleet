@@ -284,18 +284,10 @@ test('services - discover services', t => {
     },
     _now_token: 'API-TOKEN'
   }
-  const readFileSync = sinon.stub(fs, 'readFileSync')
-  readFileSync.withArgs(path.join('directory', 'package.json')).returns(JSON.stringify(pkg))
-
-  sinon.stub(fs, 'writeFileSync', (file, data) => {
-    if (file === path.join('directory', 'package.json')) {
-      pkg = JSON.parse(data)
-    }
-  })
 
   services.pkg = {}
-  services.discoverAll('directory', 0)
-    .then(() => {
+  services.discoverAll(pkg, 0)
+    .then((pkg) => {
       t.equal(services.deployments.length, 13, 'find 13 deployments')
       t.deepEqual(pkg._services, {
         's2': 'u8.sh',
@@ -306,7 +298,5 @@ test('services - discover services', t => {
 
       now.getDeployments.restore()
       now.getPkg.restore()
-      fs.readFileSync.restore()
-      fs.writeFileSync.restore()
     })
 })
