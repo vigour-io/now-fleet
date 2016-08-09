@@ -10,5 +10,5 @@ services.deployAll(process.cwd())
     console.info('Deployment successful. Services will discover each other soon.')
   })
   .catch((error) => {
-    console.error('Deployment failed due to error: %j', error)
+    console.error('Deployment failed due to error: %j, stack: %s', error, error ? error.stack : '(no stack)')
   })

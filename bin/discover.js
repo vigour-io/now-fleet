@@ -10,5 +10,5 @@ services.discoverAll(process.cwd(), 2000)
     console.info('All services discovered.')
   })
   .catch((error) => {
-    console.error('Service discovery failed due to error : %j', error)
+    console.error('Service discovery failed due to error : %j, stack: %s', error, error ? error.stack : '(no stack)')
   })

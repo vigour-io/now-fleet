@@ -36,7 +36,7 @@ test('npm client - get latest version', t => {
 test('npm client - get services', t => {
   exec
     .withArgs('npm v sample@1.3.3 services')
-    .callsArgWith(2, null, '\n{"sample2": "^2.0.0"}\n')
+    .callsArgWith(2, null, "\n{'sample2': '^2.0.0'}\n")
 
   npm.getServices('sample@1.3.3')
     .then(services => {
