@@ -76,6 +76,7 @@ test('now client - get package.json not a json', t => {
   now.getPkg('deployment-uid')
     .then(pkg => {
       t.equal(pkg.constructor, Object, 'package.json is an object')
+      t.notok(pkg.version, 'no version exists')
       t.end()
     })
 })

@@ -96,23 +96,24 @@ test('services - prepare flat services list', t => {
         deploy: true, lastDeploy: 11, lastUrl: ''
       }
 
+      var dependencies = {}
       services.servicesFlat.forEach(service => {
-        if (service.name === 's1') {
-          t.equal(service.dependants.length, 0, 'dependants: 0')
-          t.equal(service.dependencies.length, 2, 'dependencies: 2')
+        dependencies[service.name] = {
+          dependencies: service.dependencies.length,
+          dependants: service.dependants.length
         }
-        if (service.name === 's2') {
-          t.equal(service.dependants.length, 2, 'dependants: 2')
-          t.equal(service.dependencies.length, 0, 'dependencies: 0')
-        }
-        if (service.name === 's3' || service.name === 's4') {
-          t.equal(service.dependants.length, 1, 'dependants: 1')
-          t.equal(service.dependencies.length, 1, 'dependencies: 1')
-        }
+        // can not check dependencies with deep equal
+        // because it has self reference
         delete service.dependants
         delete service.dependencies
       })
       t.deepEqual(services.servicesFlat, [s1, s2, s3, s4], 'flat services list is as expected')
+      t.deepEqual(dependencies, {
+        s1: {dependencies: 2, dependants: 0},
+        s2: {dependencies: 0, dependants: 2},
+        s3: {dependencies: 1, dependants: 1},
+        s4: {dependencies: 1, dependants: 1}
+      }, 'dependency counts are as expected')
       t.end()
 
       npm.getLastVersion.restore()
@@ -148,13 +149,24 @@ test('services - prepare flat services list for circular dependency', t => {
         deploy: true, lastDeploy: 11, lastUrl: 'u10.sh'
       }
 
+      var dependencies = {}
       services.servicesFlat.forEach(service => {
-        t.equal(service.dependants.length, 1, 'dependants: 1')
-        t.equal(service.dependencies.length, 1, 'dependencies: 1')
+        dependencies[service.name] = {
+          dependencies: service.dependencies.length,
+          dependants: service.dependants.length
+        }
+        // can not check dependencies with deep equal
+        // because it has self reference
         delete service.dependants
         delete service.dependencies
       })
       t.deepEqual(services.servicesFlat, [s1, s2, s3, s4], 'flat services list is as expected')
+      t.deepEqual(dependencies, {
+        s1: {dependencies: 1, dependants: 1},
+        s2: {dependencies: 1, dependants: 1},
+        s3: {dependencies: 1, dependants: 1},
+        s4: {dependencies: 1, dependants: 1}
+      }, 'dependency counts are as expected')
       t.end()
 
       npm.getLastVersion.restore()
