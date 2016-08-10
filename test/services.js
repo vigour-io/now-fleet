@@ -258,10 +258,11 @@ test('services - deploy all successfuly', t => {
           _services: {
             's2': 'u8.sh',
             's3': { version: '1', lastDeploy: 11 }
-          }
+          },
+          _now_token: 'API-TOKEN'
         },
-        'directory/node_modules/s3': { _services: { 's4': { version: '2', lastDeploy: 11 } } },
-        'directory/node_modules/s4': { _services: { 's2': 'u8.sh' } }
+        'directory/node_modules/s3': { _services: { 's4': { version: '2', lastDeploy: 11 } }, _now_token: 'API-TOKEN' },
+        'directory/node_modules/s4': { _services: { 's2': 'u8.sh' }, _now_token: 'API-TOKEN' }
       })
       t.deepEqual(commandArgs, {
         'directory': [ 'npm install', 'now', 'npm install s3@1', 'npm install s4@2' ],
@@ -296,7 +297,8 @@ test('services - discover services', t => {
       's2': 'u8.sh',
       's3': { version: '1', lastDeploy: 11 },
       's4': { version: '2', lastDeploy: 11 }
-    }
+    },
+    _now_token: 'API-TOKEN'
   }
 
   services.pkg = {}
