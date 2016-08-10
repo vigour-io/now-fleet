@@ -4,8 +4,7 @@
   "description": "Helps with multiple microservice deployments",
   "main": "./lib/index.js",
   "bin": {
-    "now-fleet-deploy": "bin/deploy.js",
-    "now-fleet-discover": "bin/discover.js"
+    "now-fleet-deploy": "bin/deploy.js"
   },
   "scripts": {
     "test": "(ducktape; node test) | tap-difflet && standard",
