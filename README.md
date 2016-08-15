@@ -43,10 +43,15 @@ Service dependencies need a version like npm module dependencies. This version i
 We start deployment from the topmost service which depends on other services. It is service A for our example.
 
 ```bash
+NOW_TOKEN="YOUR-NOW-API-TOKEN"
+export NOW_TOKEN
 node_modules/.bin/now-fleet-deploy
 ```
 
 This script walks through all the services we depend on and dependencies of them recursively. Deploys them to now and gives us now url of root service (A).
+
+### Root Service Decision
+Deployment script should run on a service considering dependency tree. It can only walk down from top and can't discover dependants magically. If there is a service in the stack which is not a dependency of any other service, it won't be discovered and should be deployed separately.
 
 ## Service Discovery
 Each service should discover dependency urls on the boot time. This module provides a method for discovery.
