@@ -16,9 +16,7 @@ npm install now-fleet --save
 ```
 
 ## Service Dependency
-We define service dependencies in package.json for each service. Let's say we have a service A depending on service B and C.
-
-package.json for A should have a `services` field as following:
+We define service dependencies in `package.json` of each service. Let's say we have a service A depending on service B and C, `package.json` for A should have a `services` field as following:
 ```json
 {
   "services": {
@@ -28,7 +26,7 @@ package.json for A should have a `services` field as following:
 }
 ```
 
-Let's say B also depends on C. Then package.json for B should have a `services` fields as following:
+Let's say B also depends on C. Then `package.json` for B should have a `services` field as following:
 ```json
 {
   "services": {
@@ -37,10 +35,10 @@ Let's say B also depends on C. Then package.json for B should have a `services` 
 }
 ```
 
-Service dependencies need a version like npm module dependencies. This version is the published npm module version of dependency service. For our example, service A depends on `^3.0.0` of C but service B depends on `^2.0.0` of C.
+Service dependencies need a version like npm module dependencies. This version should be a **published version of npm module** for dependency service. For our example, service A depends on `^3.0.0` of C but service B depends on `^2.0.0` of C.
 
 ## Fleet Deployment
-We start deployment from the topmost service which depends on other services. It is service A for our example.
+We start deployment from the topmost service which depends on other services, for our example service A. Let's call it **root service**.
 
 ```bash
 NOW_TOKEN="YOUR-NOW-API-TOKEN"
@@ -48,10 +46,13 @@ export NOW_TOKEN
 node_modules/.bin/now-fleet-deploy
 ```
 
-This script walks through all the services we depend on and dependencies of them recursively. Deploys them to now and gives us now url of root service (A).
+This script walks through all the services we depend on and dependencies of them recursively. Deploys them to now and gives us now url of root service.
 
 ### Root Service Decision
 Deployment script should run on a service considering dependency tree. It can only walk down from top and can't discover dependants magically. If there is a service in the stack which is not a dependency of any other service, it won't be discovered and should be deployed separately.
+
+### Circular Dependency
+Circular dependencies are taken care at deployment time and all fine. A can depend on B and B can depend on A at the same time or while A depends on B and B depends on C; C can depend on A.
 
 ### Limitations
 Another version of root service can't be a dependency of any service in the tree. For example `serviceA@2.0.0` is deployment root and depends on, `serviceB@1.0.0` and `serviceC@2.0.0`. This schema allows service B or C can depending on `serviceA@2.0.0` but not on `serviceA@1.0.0`.
