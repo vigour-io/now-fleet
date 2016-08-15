@@ -55,14 +55,14 @@ Deployment script should run on a service considering dependency tree. It can on
 Circular dependencies are taken care at deployment time and all fine. A can depend on B and B can depend on A at the same time or while A depends on B and B depends on C; C can depend on A.
 
 ### Limitations
-Another version of root service can't be a dependency of any service in the tree. For example `serviceA@2.0.0` is deployment root and depends on, `serviceB@1.0.0` and `serviceC@2.0.0`. This schema allows service B or C can depending on `serviceA@2.0.0` but not on `serviceA@1.0.0`.
+Another version of root service can't be a dependency of any service in the tree. For example `serviceA@2.0.0` is deployment root and depends on, service B and service C. This schema allows service B or C depending on `serviceA@2.0.0` but not on `serviceA@1.0.0`.
 
 ## Service Discovery
 Each service should discover dependency urls on the boot time. This module provides a method for discovery.
 
 ### discoverAll(pkg, delay)
-Discovers host names of dependencies defined in package.json by polling the latest deployed services from now API. Takes care of finding the host name for the right version of the dependency service.
-Second parameter is the delay in miliseconds between each polling from now API. It'll repeat until finding the deployments. 
+Discovers host names of dependencies defined in `package.json` by polling the latest deployed services from now API. Takes care of finding the host name for the right version of the dependency service.
+Second parameter is the delay in miliseconds between each polling from now API. It'll repeat until discovering all the deployments. 
 
 ```js
 const Services = require('now-fleet').Services
