@@ -53,6 +53,9 @@ This script walks through all the services we depend on and dependencies of them
 ### Root Service Decision
 Deployment script should run on a service considering dependency tree. It can only walk down from top and can't discover dependants magically. If there is a service in the stack which is not a dependency of any other service, it won't be discovered and should be deployed separately.
 
+### Limitations
+Another version of root service can't be a dependency of any service in the tree. For example `serviceA@2.0.0` is deployment root and depends on, `serviceB@1.0.0` and `serviceC@2.0.0`. This schema allows service B or C can depending on `serviceA@2.0.0` but not on `serviceA@1.0.0`.
+
 ## Service Discovery
 Each service should discover dependency urls on the boot time. This module provides a method for discovery.
 
