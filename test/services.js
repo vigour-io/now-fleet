@@ -14,16 +14,12 @@ process.env.REGISTRY_HOST = 'REGISTRY-HOST'
 const services = new Services()
 
 const deployments = [
-  { name: 's1', version: '1', url: 'u1.sh', created: 11 },
-  { name: 's1', version: '1', url: 'u2.sh', created: 12 },
-  { name: 's1', version: '1', url: 'u3.sh', created: 13 },
-  { name: 's1', version: '2', url: 'u4.sh', created: 21 },
-  { name: 's1', version: '2', url: 'u5.sh', created: 22 },
-  { name: 's2', version: '2', url: 'u6.sh', created: 11 },
-  { name: 's2', version: '2', url: 'u7.sh', created: 21 },
-  { name: 's2', version: '2', url: 'u8.sh', created: 22 },
-  { name: 's3', version: '1', url: 'u9.sh', created: 11 },
-  { name: 's4', version: '1', url: 'u10.sh', created: 11 }
+  {name: 's1', version: '1', url: 'u3.sh', created: 13},
+  {name: 's1', version: '2', url: 'u5.sh', created: 22},
+  {name: 's2', version: '1', url: 'u6.sh', created: 11},
+  {name: 's2', version: '2', url: 'u8.sh', created: 22},
+  {name: 's3', version: '1', url: 'u9.sh', created: 11},
+  {name: 's4', version: '1', url: 'u10.sh', created: 11}
 ]
 
 test('services - prepare flat services list', t => {
