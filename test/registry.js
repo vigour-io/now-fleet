@@ -30,6 +30,23 @@ test('registry client - catch connection error', t => {
     })
 })
 
+test('registry client - invalid json', t => {
+  request
+    .withArgs(httpsRequestOptions)
+    .returns({end: () => {}})
+    .callsArgWith(1, {on: (e, cb) => {
+      cb(e === 'data' && 'not a valid json')
+    }})
+
+  registry.setHost('REGISTRY-HOST')
+  registry.getList()
+    .then(list => {
+      t.equal(list.constructor, Array, 'deployments is an array')
+      t.equal(list.length, 0, 'with zero items')
+      t.end()
+    })
+})
+
 test('registry client - get deployments list', t => {
   request
     .withArgs(httpsRequestOptions)
