@@ -5,7 +5,7 @@
 const Services = require('../lib/services')
 const services = new Services()
 
-services.deployAll(process.cwd())
+services.deployAll(process.cwd(), process.argv[2])
   .then(() => {
     console.info('Deployment successful. Services will discover each other soon.')
   })
