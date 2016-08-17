@@ -43,6 +43,8 @@ We start deployment from the topmost service which depends on other services, fo
 ```bash
 NOW_TOKEN="YOUR-NOW-API-TOKEN"
 export NOW_TOKEN
+REGISTRY_HOST="registery.host.sh"
+export REGISTRY_HOST
 node_modules/.bin/now-fleet-deploy
 ```
 
