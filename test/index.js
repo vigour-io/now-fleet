@@ -1,5 +1,5 @@
 'use strict'
 
-require('./now')
+require('./registry')
 require('./npm')
 require('./services')
