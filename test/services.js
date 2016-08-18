@@ -14,12 +14,15 @@ process.env.REGISTRY_HOST = 'REGISTRY-HOST'
 const services = new Services()
 
 const deployments = [
-  {name: 's1', version: '1', url: 'u3.sh', created: 13},
-  {name: 's1', version: '2', url: 'u5.sh', created: 22},
-  {name: 's2', version: '1', url: 'u6.sh', created: 11},
-  {name: 's2', version: '2', url: 'u8.sh', created: 22},
-  {name: 's3', version: '1', url: 'u9.sh', created: 11},
-  {name: 's4', version: '1', url: 'u10.sh', created: 11}
+  {name: 's1', version: '1', env: 'a=b', url: 'u3.sh', created: 13},
+  {name: 's1', version: '1', env: 'a=c', url: 'u2.sh', created: 12},
+  {name: 's1', version: '2', env: 'c=d', url: 'u4.sh', created: 21},
+  {name: 's1', version: '2', env: 'a=b&c=d', url: 'u5.sh', created: 22},
+  {name: 's2', version: '1', env: 'c=d', url: 'u6.sh', created: 11},
+  {name: 's2', version: '2', env: 'a=b', url: 'u7.sh', created: 21},
+  {name: 's2', version: '2', env: 'a=b&c=d', url: 'u8.sh', created: 22},
+  {name: 's3', version: '1', env: 'a=b&c=d', url: 'u9.sh', created: 11},
+  {name: 's4', version: '1', env: 'a=b&c=d', url: 'u10.sh', created: 11}
 ]
 
 test('services - prepare flat services list', t => {
@@ -32,6 +35,7 @@ test('services - prepare flat services list', t => {
 
   services.deployments = deployments
   services.servicesFlat = []
+  services.env = 'a=b&c=d'
   services.addDependencies(services.addService('s1', '2'), { 's2': '^2', 's3': '^1' })
     .then(() => {
       var s1 = {
@@ -86,11 +90,12 @@ test('services - prepare flat services list for circular dependency', t => {
 
   services.deployments = deployments
   services.servicesFlat = []
+  services.env = 'a=b&c=d'
   services.addDependencies(services.addService('s1', '1'), { 's2': '^3' })
     .then(() => {
       var s1 = {
         name: 's1', version: '1',
-        deploy: true, lastDeploy: 13, lastUrl: 'u3.sh'
+        deploy: true, lastDeploy: 0, lastUrl: ''
       }
       var s2 = {
         name: 's2', version: '3',
@@ -200,7 +205,7 @@ test('services - deploy all successfuly', t => {
   })
 
   services.servicesFlat = []
-  services.deployAll('directory')
+  services.deployAll('directory', 'a=b&c=d')
     .then(() => {
       t.deepEqual(writeFileSyncArgs, {
         'directory': {
@@ -210,18 +215,21 @@ test('services - deploy all successfuly', t => {
             's2': 'u8.sh',
             's3': { version: '1', lastDeploy: 11 }
           },
+          _env: 'a=b&c=d',
           _registry_host: 'REGISTRY-HOST'
         },
         'directory/node_modules/s3': {
           _services: {
             's4': { version: '2', lastDeploy: 0 }
           },
+          _env: 'a=b&c=d',
           _registry_host: 'REGISTRY-HOST'
         },
         'directory/node_modules/s4': {
           _services: {
             's2': 'u8.sh'
           },
+          _env: 'a=b&c=d',
           _registry_host: 'REGISTRY-HOST'
         }
       })
@@ -243,8 +251,8 @@ test('services - deploy all successfuly', t => {
 })
 
 test('services - discover services', t => {
-  const s4New = { name: 's4', version: '2', url: 'u11.sh', created: 12 }
-  const s3New = { name: 's3', version: '1', url: 'u12.sh', created: 12 }
+  const s4New = { name: 's4', version: '2', env: 'a=b&c=d', url: 'u11.sh', created: 12 }
+  const s3New = { name: 's3', version: '1', env: 'a=b&c=d', url: 'u12.sh', created: 12 }
 
   const getList = sinon.stub(registry, 'getList')
   getList.onFirstCall().returns(Promise.resolve(deployments.concat(s4New)))
@@ -256,6 +264,7 @@ test('services - discover services', t => {
       's3': { version: '1', lastDeploy: 11 },
       's4': { version: '2', lastDeploy: 11 }
     },
+    _env: 'a=b&c=d',
     _registry_host: 'REGISTRY-HOST'
   }
 
@@ -266,6 +275,8 @@ test('services - discover services', t => {
         's3': 'u12.sh',
         's4': 'u11.sh'
       }, 'services should be discovered as expected')
+      t.equal(process.env.a, 'b', 'env a is in place')
+      t.equal(process.env.c, 'd', 'env c is in place')
       t.end()
 
       registry.getList.restore()
