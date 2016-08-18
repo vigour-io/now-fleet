@@ -45,7 +45,7 @@ NOW_TOKEN="YOUR-NOW-API-TOKEN"
 export NOW_TOKEN
 REGISTRY_HOST="registery.host.sh"
 export REGISTRY_HOST
-node_modules/.bin/now-fleet-deploy
+node_modules/.bin/now-fleet-deploy type=ENV_TYPE&
 ```
 
 This script walks through all the services we depend on and dependencies of them recursively. Deploys them to now and gives us now url of root service.
