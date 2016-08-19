@@ -208,6 +208,16 @@ test('services - deploy all successfuly', t => {
   services.deployAll('directory', 'a=b&c=d')
     .then(() => {
       t.deepEqual(writeFileSyncArgs, {
+        'directory': {
+          name: 's1', version: '2',
+          services: { 's2': '^2', 's3': '^1' },
+          _services: {
+            's2': 'u8.sh',
+            's3': { version: '1', lastDeploy: 11 }
+          },
+          _env: 'a=b&c=d',
+          _registry_host: 'REGISTRY-HOST'
+        },
         'directory/node_modules/s3': {
           _services: {
             's4': { version: '2', lastDeploy: 0 }
