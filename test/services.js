@@ -208,16 +208,6 @@ test('services - deploy all successfuly', t => {
   services.deployAll('directory', 'a=b&c=d')
     .then(() => {
       t.deepEqual(writeFileSyncArgs, {
-        'directory': {
-          name: 's1', version: '2',
-          services: { 's2': '^2', 's3': '^1' },
-          _services: {
-            's2': 'u8.sh',
-            's3': { version: '1', lastDeploy: 11 }
-          },
-          _env: 'a=b&c=d',
-          _registry_host: 'REGISTRY-HOST'
-        },
         'directory/node_modules/s3': {
           _services: {
             's4': { version: '2', lastDeploy: 0 }
@@ -232,13 +222,13 @@ test('services - deploy all successfuly', t => {
           _env: 'a=b&c=d',
           _registry_host: 'REGISTRY-HOST'
         }
-      })
+      }, 'package.json files are prepared')
       t.deepEqual(commandArgs, {
-        'directory': [ 'npm install', 'now', 'npm install s3@1', 'npm install s4@2' ],
+        'directory': [ 'npm install s3@1', 'npm install s4@2' ],
         'directory/node_modules/s3': [ 'npm install', 'now' ],
         'directory/node_modules/s4': [ 'npm install', 'now' ],
         'no-cwd': [ 'rm -r directory/node_modules/s3', 'rm -r directory/node_modules/s4' ]
-      })
+      }, 'deploy commans ran')
       t.end()
 
       registry.getList.restore()

@@ -40,6 +40,7 @@
     "coveralls": "^2.11.9",
     "istanbul": "^0.4.3",
     "standard": "^7.0.1",
+    "vigour-doc": "^1.1.5",
     "pre-commit": "^1.1.3"
   }
 }
