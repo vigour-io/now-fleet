@@ -11,6 +11,7 @@ const npm = require('../lib/npm')
 const command = require('../lib/command')
 
 process.env.REGISTRY_HOST = 'REGISTRY-HOST'
+process.env.NPM_TOKEN = 'NPM-TOKEN'
 const services = new Services()
 
 const deployments = [
@@ -186,7 +187,11 @@ test('services - deploy all successfuly', t => {
 
   var writeFileSyncArgs = {}
   sinon.stub(fs, 'writeFileSync', (file, data) => {
-    writeFileSyncArgs[path.parse(file).dir] = JSON.parse(data)
+    const parsed = path.parse(file)
+    if (parsed.name === '.npmrc') {
+      return
+    }
+    writeFileSyncArgs[parsed.dir] = JSON.parse(data)
   })
 
   var commandArgs = {}
@@ -235,8 +240,8 @@ test('services - deploy all successfuly', t => {
       }, 'package.json files are prepared')
       t.deepEqual(commandArgs, {
         'directory': [ 'npm install s3@1', 'npm install s4@2' ],
-        'directory/node_modules/s3': [ 'npm install', 'now' ],
-        'directory/node_modules/s4': [ 'npm install', 'now' ],
+        'directory/node_modules/s3': [ 'npm install --production', 'now' ],
+        'directory/node_modules/s4': [ 'npm install --production', 'now' ],
         'no-cwd': [ 'rm -r directory/node_modules/s3', 'rm -r directory/node_modules/s4' ]
       }, 'deploy commans ran')
       t.end()
