@@ -240,8 +240,8 @@ test('services - deploy all successfuly', t => {
       }, 'package.json files are prepared')
       t.deepEqual(commandArgs, {
         'directory': [ 'npm install s3@1', 'npm install s4@2' ],
-        'directory/node_modules/s3': [ 'npm install --production', 'now' ],
-        'directory/node_modules/s4': [ 'npm install --production', 'now' ],
+        'directory/node_modules/s3': [ 'npm install --production', 'now -N' ],
+        'directory/node_modules/s4': [ 'npm install --production', 'now -N' ],
         'no-cwd': [ 'rm -r directory/node_modules/s3', 'rm -r directory/node_modules/s4' ]
       }, 'deploy commans ran')
       t.end()
