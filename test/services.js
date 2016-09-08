@@ -220,28 +220,25 @@ test('services - deploy all successfuly', t => {
             's2': 'u8.sh',
             's3': { version: '1', lastDeploy: 11 }
           },
-          _env: 'a=b&c=d',
-          _registry_host: 'REGISTRY-HOST'
+          _env: 'a=b&c=d'
         },
         'directory/node_modules/s3': {
           _services: {
             's4': { version: '2', lastDeploy: 0 }
           },
-          _env: 'a=b&c=d',
-          _registry_host: 'REGISTRY-HOST'
+          _env: 'a=b&c=d'
         },
         'directory/node_modules/s4': {
           _services: {
             's2': 'u8.sh'
           },
-          _env: 'a=b&c=d',
-          _registry_host: 'REGISTRY-HOST'
+          _env: 'a=b&c=d'
         }
       }, 'package.json files are prepared')
       t.deepEqual(commandArgs, {
         'directory': [ 'npm install s3@1', 'npm install s4@2' ],
-        'directory/node_modules/s3': [ 'now -N' ],
-        'directory/node_modules/s4': [ 'now -N' ],
+        'directory/node_modules/s3': [ 'now -N -e a=b -e c=d -e REGISTRY_HOST=REGISTRY-HOST' ],
+        'directory/node_modules/s4': [ 'now -N -e a=b -e c=d -e REGISTRY_HOST=REGISTRY-HOST' ],
         'no-cwd': [ 'rm -r directory/node_modules/s3', 'rm -r directory/node_modules/s4' ]
       }, 'deploy commans ran')
       t.end()
@@ -269,8 +266,7 @@ test('services - discover services', t => {
       's3': { version: '1', lastDeploy: 11 },
       's4': { version: '2', lastDeploy: 11 }
     },
-    _env: 'a=b&c=d',
-    _registry_host: 'REGISTRY-HOST'
+    _env: 'a=b&c=d'
   }
 
   services.discoverAll(pkg, 0)
@@ -280,8 +276,6 @@ test('services - discover services', t => {
         's3': 'u12.sh',
         's4': 'u11.sh'
       }, 'services should be discovered as expected')
-      t.equal(process.env.a, 'b', 'env a is in place')
-      t.equal(process.env.c, 'd', 'env c is in place')
       t.end()
 
       registry.getList.restore()

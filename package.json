@@ -31,7 +31,7 @@
   },
   "homepage": "https://github.com/vigour-io/now-fleet#readme",
   "dependencies": {
-    "now": "0.23.0"
+    "now": "0.23.1"
   },
   "devDependencies": {
     "tape": "^4.4.0",
