@@ -41,11 +41,9 @@ Service dependencies need a version like npm module dependencies. This version s
 We start deployment from the topmost service which depends on other services, for our example service A. Let's call it **root service**.
 
 ```bash
-NOW_TOKEN="YOUR-NOW-API-TOKEN"
-export NOW_TOKEN
-REGISTRY_HOST="registery.host.sh"
-export REGISTRY_HOST
-node_modules/.bin/now-fleet-deploy type=ENV_TYPE&
+export NOW_TOKEN="YOUR-NOW-API-TOKEN"
+export REGISTRY_HOST="registery.host.sh"
+node_modules/.bin/now-fleet-deploy type=ENV_TYPE
 ```
 
 This script walks through all the services we depend on and dependencies of them recursively. Deploys them to now and gives us now url of root service.
@@ -67,8 +65,7 @@ Discovers host names of dependencies defined in `package.json` by polling the la
 Second parameter is the delay in miliseconds between each polling from now API. It'll repeat until discovering all the deployments. 
 
 ```js
-const Services = require('now-fleet').Services
-const services = new Services()
+const services = require('now-fleet').services
 
 const pkg = require('./package.json')
 
