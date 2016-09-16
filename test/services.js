@@ -5,14 +5,13 @@ const sinon = require('sinon')
 const path = require('path')
 const fs = require('fs')
 
-const Services = require('../lib/services')
+const services = require('../lib/services')
 const registry = require('../lib/registry')
 const npm = require('../lib/npm')
 const command = require('../lib/command')
 
 process.env.REGISTRY_HOST = 'REGISTRY-HOST'
 process.env.NPM_TOKEN = 'NPM-TOKEN'
-const services = new Services()
 
 const deployments = [
   {name: 's1', version: '1', env: 'a=b', url: 'u3.sh', created: 13},
@@ -34,9 +33,9 @@ test('services - prepare flat services list', t => {
   getServices.withArgs('s3@1').returns(Promise.resolve({ 's4': '^2' }))
   getServices.withArgs('s4@2').returns(Promise.resolve({ 's2': '^2' }))
 
-  services.deployments = deployments
-  services.servicesFlat = []
-  services.env = 'a=b&c=d'
+  services.data.deployments = deployments
+  services.data.servicesFlat = []
+  services.data.env = 'a=b&c=d'
   services.addDependencies(services.addService('s1', '2'), { 's2': '^2', 's3': '^1' })
     .then(() => {
       var s1 = {
@@ -57,7 +56,7 @@ test('services - prepare flat services list', t => {
       }
 
       var dependencies = {}
-      services.servicesFlat.forEach(service => {
+      services.data.servicesFlat.forEach(service => {
         dependencies[service.name] = {
           dependencies: service.dependencies.length,
           dependants: service.dependants.length
@@ -67,7 +66,7 @@ test('services - prepare flat services list', t => {
         delete service.dependants
         delete service.dependencies
       })
-      t.deepEqual(services.servicesFlat, [s1, s2, s3, s4], 'flat services list is as expected')
+      t.deepEqual(services.data.servicesFlat, [s1, s2, s3, s4], 'flat services list is as expected')
       t.deepEqual(dependencies, {
         s1: {dependencies: 2, dependants: 0},
         s2: {dependencies: 0, dependants: 2},
@@ -89,9 +88,9 @@ test('services - prepare flat services list for circular dependency', t => {
   getServices.withArgs('s3@1').returns(Promise.resolve({ 's4': '^1' }))
   getServices.withArgs('s4@1').returns(Promise.resolve({ 's1': '^1' }))
 
-  services.deployments = deployments
-  services.servicesFlat = []
-  services.env = 'a=b&c=d'
+  services.data.deployments = deployments
+  services.data.servicesFlat = []
+  services.data.env = 'a=b&c=d'
   services.addDependencies(services.addService('s1', '1'), { 's2': '^3' })
     .then(() => {
       var s1 = {
@@ -112,7 +111,7 @@ test('services - prepare flat services list for circular dependency', t => {
       }
 
       var dependencies = {}
-      services.servicesFlat.forEach(service => {
+      services.data.servicesFlat.forEach(service => {
         dependencies[service.name] = {
           dependencies: service.dependencies.length,
           dependants: service.dependants.length
@@ -122,7 +121,7 @@ test('services - prepare flat services list for circular dependency', t => {
         delete service.dependants
         delete service.dependencies
       })
-      t.deepEqual(services.servicesFlat, [s1, s2, s3, s4], 'flat services list is as expected')
+      t.deepEqual(services.data.servicesFlat, [s1, s2, s3, s4], 'flat services list is as expected')
       t.deepEqual(dependencies, {
         s1: {dependencies: 1, dependants: 1},
         s2: {dependencies: 1, dependants: 1},
@@ -140,7 +139,7 @@ test('services - deploy all with error', t => {
   const getList = sinon.stub(registry, 'getList')
   getList.returns(Promise.resolve(deployments))
 
-  const getPkg = sinon.stub(Services, 'getPkg')
+  const getPkg = sinon.stub(services, 'getPkg')
   getPkg.withArgs('directory').returns({
     name: 's1', version: 's2',
     services: { 's2': '^2', 's3': '^1' }
@@ -154,7 +153,7 @@ test('services - deploy all with error', t => {
   getServices.withArgs('s4@2').returns(Promise.resolve({ 's2': '^2', 's1': '^1' }))
   getServices.withArgs('s1@1').returns(Promise.resolve({}))
 
-  services.servicesFlat = []
+  services.data.servicesFlat = []
   services.deployAll('directory')
     .catch((error) => {
       t.equal(error.message, 'Can not depend on a different version of root module: s1@1', 'error caught')
@@ -163,7 +162,7 @@ test('services - deploy all with error', t => {
       registry.getList.restore()
       npm.getLastVersion.restore()
       npm.getServices.restore()
-      Services.getPkg.restore()
+      services.getPkg.restore()
     })
 })
 
@@ -209,7 +208,7 @@ test('services - deploy all successfuly', t => {
     return Promise.resolve()
   })
 
-  services.servicesFlat = []
+  services.data.servicesFlat = []
   services.deployAll('directory', 'a=b&c=d')
     .then(() => {
       t.deepEqual(writeFileSyncArgs, {
@@ -240,7 +239,7 @@ test('services - deploy all successfuly', t => {
         'directory/node_modules/s3': [ 'now -N -e a=b -e c=d -e REGISTRY_HOST=REGISTRY-HOST' ],
         'directory/node_modules/s4': [ 'now -N -e a=b -e c=d -e REGISTRY_HOST=REGISTRY-HOST' ],
         'no-cwd': [ 'rm -r directory/node_modules/s3', 'rm -r directory/node_modules/s4' ]
-      }, 'deploy commans ran')
+      }, 'deploy commands ran as expected')
       t.end()
 
       registry.getList.restore()
