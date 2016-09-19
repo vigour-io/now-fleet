@@ -2,10 +2,9 @@
 
 'use strict'
 
-const Services = require('../lib/services')
-const services = new Services()
+const fleet = require('../lib/fleet')
 
-services.deployAll(process.cwd(), process.argv[2])
+fleet.deployAll(process.cwd(), process.argv[2])
   .then(() => {
     console.info('Deployment successful. Services will discover each other soon.')
   })

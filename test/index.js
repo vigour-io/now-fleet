@@ -2,4 +2,4 @@
 
 require('./registry')
 require('./npm')
-require('./services')
+require('./fleet')

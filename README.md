@@ -65,11 +65,11 @@ Discovers host names of dependencies defined in `package.json` by polling the la
 Second parameter is the delay in miliseconds between each polling from now API. It'll repeat until discovering all the deployments. 
 
 ```js
-const services = require('now-fleet').services
+const fleet = require('now-fleet').fleet
 
 const pkg = require('./package.json')
 
-services.discoverAll(pkg, 2000)
+fleet.discoverAll(pkg, 2000)
   .then(pkg => {
     // pkg._services object has all the host names
     // pkg._services.serviceC is something like url-sdfsd.now.sh
