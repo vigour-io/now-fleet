@@ -5,6 +5,8 @@ const sinon = require('sinon')
 const path = require('path')
 const fs = require('fs')
 
+const now = require('observe-now')
+
 const fleet = require('../lib/fleet')
 const registry = require('../lib/registry')
 const npm = require('../lib/npm')
@@ -12,6 +14,7 @@ const command = require('../lib/command')
 
 process.env.REGISTRY_HOST = 'REGISTRY-HOST'
 process.env.NPM_TOKEN = 'NPM-TOKEN'
+process.env.NOW_TOKEN = 'NOW-TOKEN'
 
 const deployments = [
   {name: 's1', version: '1', env: 'a=b', url: 'u3.sh', created: 13},
@@ -208,6 +211,42 @@ test('services - deploy all successfuly', t => {
     return Promise.resolve()
   })
 
+  function prepareDeployer (url) {
+    return {
+      on (e, cb) {
+        if (e === 'deployed') {
+          setTimeout(cb, 0)
+        } else if (e === 'ready') {
+          setTimeout(cb, 100)
+        }
+        return this
+      },
+      url: {
+        compute () {
+          return url
+        }
+      },
+      deploy () {
+        return this
+      }
+    }
+  }
+
+  const nowDeploy = sinon.stub(now, 'deploy')
+  nowDeploy
+    .withArgs('directory/node_modules/s3', {
+      a: 'b', c: 'd',
+      REGISTRY_HOST: 'REGISTRY-HOST'
+    }, 'NOW-TOKEN')
+    .returns(prepareDeployer('https://u3.sh'))
+
+  nowDeploy
+    .withArgs('directory/node_modules/s4', {
+      a: 'b', c: 'd',
+      REGISTRY_HOST: 'REGISTRY-HOST'
+    }, 'NOW-TOKEN')
+    .returns(prepareDeployer('https://u4.sh'))
+
   fleet.data.servicesFlat = []
   fleet.deployAll('directory', 'a=b&c=d')
     .then(() => {
@@ -217,7 +256,7 @@ test('services - deploy all successfuly', t => {
           services: { 's2': '^2', 's3': '^1' },
           _services: {
             's2': 'u8.sh',
-            's3': { version: '1', lastDeploy: 11 }
+            's3': 'u3.sh'
           },
           _env: 'a=b&c=d'
         },
@@ -236,8 +275,6 @@ test('services - deploy all successfuly', t => {
       }, 'package.json files are prepared')
       t.deepEqual(commandArgs, {
         'directory': [ 'npm install s3@1', 'npm install s4@2' ],
-        'directory/node_modules/s3': [ 'now -N -e a=b -e c=d -e REGISTRY_HOST=REGISTRY-HOST' ],
-        'directory/node_modules/s4': [ 'now -N -e a=b -e c=d -e REGISTRY_HOST=REGISTRY-HOST' ],
         'no-cwd': [ 'rm -r directory/node_modules/s3', 'rm -r directory/node_modules/s4' ]
       }, 'deploy commands ran as expected')
       t.end()
