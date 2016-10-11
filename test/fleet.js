@@ -5,6 +5,7 @@ const sinon = require('sinon')
 const path = require('path')
 const fs = require('fs')
 
+const pnpm = require('pnpm')
 const now = require('observe-now')
 
 const fleet = require('../lib/fleet')
@@ -196,20 +197,12 @@ test('services - deploy all successfuly', t => {
     writeFileSyncArgs[parsed.dir] = JSON.parse(data)
   })
 
-  var commandArgs = {}
-  sinon.stub(command, 'run', function (cmd, cwd) {
-    cwd = cwd || 'no-cwd'
-    if (!commandArgs[cwd]) {
-      commandArgs[cwd] = []
-    }
-    commandArgs[cwd].push(cmd)
+  const installPkgs = sinon.stub(pnpm, 'installPkgs')
+  installPkgs
+    .returns(Promise.resolve())
 
-    if (cmd === 'now' && cwd === 'directory') {
-      return Promise.resolve('Ready! https://dummy-url.sh ')
-    }
-
-    return Promise.resolve()
-  })
+  const run = sinon.stub(command, 'run')
+  run.returns(Promise.resolve())
 
   function prepareDeployer (url) {
     return {
@@ -273,10 +266,13 @@ test('services - deploy all successfuly', t => {
           _env: 'a=b&c=d'
         }
       }, 'package.json files are prepared')
-      t.deepEqual(commandArgs, {
-        'directory': [ 'npm install s3@1', 'npm install s4@2' ],
-        'no-cwd': [ 'rm -r directory/node_modules/s3', 'rm -r directory/node_modules/s4' ]
-      }, 'deploy commands ran as expected')
+      t.ok(installPkgs.getCall(0).calledWith(
+        { s3: '1', s4: '2' },
+        { cwd: 'directory', save: false, quiet: true }
+      ), 'pnpm ran as expected')
+      t.ok(run.getCall(0).calledWith('rm -r directory/node_modules/s3'), 'removed s3')
+      t.ok(run.getCall(1).calledWith('rm -r directory/node_modules/s4'), 'removed s4')
+      t.ok(run.getCall(2).calledWith('rm -r directory/node_modules/.store'), 'removed pnpm store')
       t.end()
 
       registry.getList.restore()
@@ -284,7 +280,8 @@ test('services - deploy all successfuly', t => {
       npm.getServices.restore()
       fs.readFileSync.restore()
       fs.writeFileSync.restore()
-      command.run.restore()
+      run.restore()
+      installPkgs.restore()
     })
 })
 
