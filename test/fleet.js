@@ -272,7 +272,6 @@ test('services - deploy all successfuly', t => {
       ), 'pnpm ran as expected')
       t.ok(run.getCall(0).calledWith('rm -r directory/node_modules/s3'), 'removed s3')
       t.ok(run.getCall(1).calledWith('rm -r directory/node_modules/s4'), 'removed s4')
-      t.ok(run.getCall(2).calledWith('rm -r directory/node_modules/.store'), 'removed pnpm store')
       t.end()
 
       registry.getList.restore()
