@@ -297,9 +297,6 @@ test('services - deploy all successfuly', t => {
 })
 
 test('services - discover services', t => {
-  const s4New = { 11: { id: '11', name: 's4', url: 'u11.sh', created: 12, pkg: { version: '2', env: 'a=b&c=d', routes: {}, wrapper: {} } } }
-  const s3New = { 12: { id: '12', name: 's3', url: 'u12.sh', created: 12, pkg: { version: '1', env: 'a=b&c=d', routes: {}, wrapper: {} } } }
-
   const subscribe = sinon.stub(Hub.prototype, 'subscribe')
   const get = sinon.stub(Hub.prototype, 'get')
 
@@ -309,12 +306,7 @@ test('services - discover services', t => {
 
   get
     .withArgs('deployments')
-    .onFirstCall()
     .returns(registryDeployments)
-    .onSecondCall()
-    .returns(registryDeployments.set(s4New))
-    .onThirdCall()
-    .returns(registryDeployments.set(s3New))
 
   var pkg = {
     _services: {
@@ -337,4 +329,14 @@ test('services - discover services', t => {
       subscribe.restore()
       get.restore()
     })
+
+  const s4New = { 11: { id: '11', name: 's4', url: 'u11.sh', created: 12, pkg: { version: '2', env: 'a=b&c=d', routes: {}, wrapper: {} } } }
+  const s3New = { 12: { id: '12', name: 's3', url: 'u12.sh', created: 12, pkg: { version: '1', env: 'a=b&c=d', routes: {}, wrapper: {} } } }
+
+  setTimeout(() => {
+    registryDeployments.set(s4New)
+    setTimeout(() => {
+      registryDeployments.set(s3New)
+    }, 300)
+  }, 300)
 })
