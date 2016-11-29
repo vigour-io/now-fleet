@@ -5,10 +5,10 @@ const sinon = require('sinon')
 const path = require('path')
 const fs = require('fs')
 
+const Hub = require('brisky-hub')
 const now = require('observe-now')
 
 const fleet = require('../lib/fleet')
-const registry = require('../lib/registry')
 const npm = require('../lib/npm')
 const command = require('../lib/command')
 
@@ -27,6 +27,20 @@ const deployments = [
   {name: 's3', version: '1', env: 'a=b&c=d', url: 'u9.sh', created: 11},
   {name: 's4', version: '1', env: 'a=b&c=d', url: 'u10.sh', created: 11}
 ]
+
+const registryDeployments = new Hub({
+  1: { id: '1', name: 's1', url: 'u1.sh', created: 11, pkg: { version: '1', env: 'a=b', routes: {}, wrapper: {} } },
+  2: { id: '2', name: 's1', url: 'u2.sh', created: 12, pkg: { version: '1', env: 'a=c', routes: {}, wrapper: {} } },
+  3: { id: '3', name: 's1', url: 'u3.sh', created: 13, pkg: { version: '1', env: 'a=b', routes: {}, wrapper: {} } },
+  4: { id: '4', name: 's1', url: 'u4.sh', created: 21, pkg: { version: '2', env: 'c=d', routes: {}, wrapper: {} } },
+  5: { id: '5', name: 's1', url: 'u5.sh', created: 22, pkg: { version: '2', env: 'a=b&c=d', routes: {}, wrapper: {} } },
+  6: { id: '6', name: 's2', url: 'u6.sh', created: 11, pkg: { version: '1', env: 'c=d', routes: {}, wrapper: {} } },
+  7: { id: '7', name: 's2', url: 'u7.sh', created: 21, pkg: { version: '2', env: 'a=b', routes: {}, wrapper: {} } },
+  8: { id: '8', name: 's2', url: 'u8.sh', created: 22, pkg: { version: '2', env: 'a=b&c=d', routes: {}, wrapper: {} } },
+  9: { id: '9', name: 's3', url: 'u9.sh', created: 11, pkg: { version: '1', env: 'a=b&c=d', routes: {}, wrapper: {} } },
+  10: { id: '10', name: 's4', url: 'u10.sh', created: 11, pkg: { version: '1', env: 'a=b&c=d', routes: {}, wrapper: {} } },
+  99: { id: '99', name: 's10', url: 'u99.sh', created: 11, pkg: {} }
+})
 
 test('services - prepare flat services list', t => {
   sinon.stub(npm, 'getLastVersion', v => Promise.resolve(v.split('@').pop().slice(1)))
@@ -139,14 +153,16 @@ test('services - prepare flat services list for circular dependency', t => {
 })
 
 test('services - deploy all with error', t => {
-  const getList = sinon.stub(registry, 'getList')
-  getList.returns(Promise.resolve(deployments))
+  const subscribe = sinon.stub(Hub.prototype, 'subscribe')
+  const get = sinon.stub(Hub.prototype, 'get')
 
-  const getPkg = sinon.stub(fleet, 'getPkg')
-  getPkg.withArgs('directory').returns({
-    name: 's1', version: 's2',
-    services: { 's2': '^2', 's3': '^1' }
-  })
+  subscribe
+    .withArgs({ deployments: { val: true } })
+    .callsArg(1)
+
+  get
+    .withArgs('deployments')
+    .returns(registryDeployments)
 
   sinon.stub(npm, 'getLastVersion', v => Promise.resolve(v.split('@').pop().slice(1)))
 
@@ -156,28 +172,41 @@ test('services - deploy all with error', t => {
   getServices.withArgs('s4@2').returns(Promise.resolve({ 's2': '^2', 's1': '^1' }))
   getServices.withArgs('s1@1').returns(Promise.resolve({}))
 
+  const pkg = {
+    name: 's1', version: 's2',
+    services: { 's2': '^2', 's3': '^1' }
+  }
   fleet.data.servicesFlat = []
-  fleet.deployAll('directory')
+  fleet.getServices(pkg, 'directory')
     .catch((error) => {
       t.equal(error.message, 'Can not depend on a different version of root module: s1@1', 'error caught')
       t.end()
 
-      registry.getList.restore()
+      subscribe.restore()
+      get.restore()
       npm.getLastVersion.restore()
       npm.getServices.restore()
-      fleet.getPkg.restore()
     })
 })
 
 test('services - deploy all successfuly', t => {
-  const getList = sinon.stub(registry, 'getList')
-  getList.returns(Promise.resolve(deployments))
+  const subscribe = sinon.stub(Hub.prototype, 'subscribe')
+  const get = sinon.stub(Hub.prototype, 'get')
 
-  const readFileSync = sinon.stub(fs, 'readFileSync')
-  readFileSync.withArgs(path.join('directory', 'package.json')).returns(JSON.stringify({
+  subscribe
+    .withArgs({ deployments: { val: true } })
+    .callsArg(1)
+
+  get
+    .withArgs('deployments')
+    .returns(registryDeployments)
+
+  const pkg = {
     name: 's1', version: '2',
     services: { 's2': '^2', 's3': '^1' }
-  }))
+  }
+
+  const readFileSync = sinon.stub(fs, 'readFileSync')
   readFileSync.returns('{}')
 
   sinon.stub(npm, 'getLastVersion', v => Promise.resolve(v.split('@').pop().slice(1)))
@@ -236,18 +265,9 @@ test('services - deploy all successfuly', t => {
     .returns(prepareDeployer('https://u4.sh'))
 
   fleet.data.servicesFlat = []
-  fleet.deployAll('directory', 'a=b&c=d')
+  fleet.getServices(pkg, 'directory', 'a=b&c=d')
     .then(() => {
       t.deepEqual(writeFileSyncArgs, {
-        'directory': {
-          name: 's1', version: '2',
-          services: { 's2': '^2', 's3': '^1' },
-          _services: {
-            's2': 'u8.sh',
-            's3': 'u3.sh'
-          },
-          _env: 'a=b&c=d'
-        },
         'directory/node_modules/s3': {
           _services: {
             's4': { version: '2', lastDeploy: 0 }
@@ -266,7 +286,8 @@ test('services - deploy all successfuly', t => {
       t.ok(run.getCall(2).calledWith('rm -r directory/node_modules/s4'), 'removed s4')
       t.end()
 
-      registry.getList.restore()
+      subscribe.restore()
+      get.restore()
       npm.getLastVersion.restore()
       npm.getServices.restore()
       fs.readFileSync.restore()
@@ -276,12 +297,16 @@ test('services - deploy all successfuly', t => {
 })
 
 test('services - discover services', t => {
-  const s4New = { name: 's4', version: '2', env: 'a=b&c=d', url: 'u11.sh', created: 12 }
-  const s3New = { name: 's3', version: '1', env: 'a=b&c=d', url: 'u12.sh', created: 12 }
+  const subscribe = sinon.stub(Hub.prototype, 'subscribe')
+  const get = sinon.stub(Hub.prototype, 'get')
 
-  const getList = sinon.stub(registry, 'getList')
-  getList.onFirstCall().returns(Promise.resolve(deployments.concat(s4New)))
-  getList.onSecondCall().returns(Promise.resolve(deployments.concat(s4New, s3New)))
+  subscribe
+    .withArgs({ deployments: { val: true } })
+    .callsArg(1)
+
+  get
+    .withArgs('deployments')
+    .returns(registryDeployments)
 
   var pkg = {
     _services: {
@@ -292,7 +317,7 @@ test('services - discover services', t => {
     _env: 'a=b&c=d'
   }
 
-  fleet.discoverAll(pkg, 0)
+  fleet.getServices(pkg, 1)
     .then((pkg) => {
       t.deepEqual(pkg._services, {
         's2': 'u8.sh',
@@ -301,6 +326,17 @@ test('services - discover services', t => {
       }, 'services should be discovered as expected')
       t.end()
 
-      registry.getList.restore()
+      subscribe.restore()
+      get.restore()
     })
+
+  const s4New = { 11: { id: '11', name: 's4', url: 'u11.sh', created: 12, pkg: { version: '2', env: 'a=b&c=d', routes: {}, wrapper: {} } } }
+  const s3New = { 12: { id: '12', name: 's3', url: 'u12.sh', created: 12, pkg: { version: '1', env: 'a=b&c=d', routes: {}, wrapper: {} } } }
+
+  setTimeout(() => {
+    registryDeployments.set(s4New)
+    setTimeout(() => {
+      registryDeployments.set(s3New)
+    }, 300)
+  }, 300)
 })
