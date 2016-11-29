@@ -3,8 +3,9 @@
 'use strict'
 
 const fleet = require('../lib/fleet')
+const dir = process.cwd()
 
-fleet.deployAll(process.cwd(), process.argv[2])
+fleet.getServices(fleet.getPkg(dir), dir, process.argv[2])
   .then(() => {
     console.info('Deployment successful. Services will discover each other soon.')
   })
