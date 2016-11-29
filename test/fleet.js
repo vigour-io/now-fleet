@@ -190,14 +190,23 @@ test('services - deploy all with error', t => {
 })
 
 test('services - deploy all successfuly', t => {
-  const getList = sinon.stub(registry, 'getList')
-  getList.returns(Promise.resolve(deployments))
+  const subscribe = sinon.stub(Hub.prototype, 'subscribe')
+  const get = sinon.stub(Hub.prototype, 'get')
 
-  const readFileSync = sinon.stub(fs, 'readFileSync')
-  readFileSync.withArgs(path.join('directory', 'package.json')).returns(JSON.stringify({
+  subscribe
+    .withArgs({ deployments: { val: true } })
+    .callsArg(1)
+
+  get
+    .withArgs('deployments')
+    .returns(registryDeployments)
+
+  const pkg = {
     name: 's1', version: '2',
     services: { 's2': '^2', 's3': '^1' }
-  }))
+  }
+
+  const readFileSync = sinon.stub(fs, 'readFileSync')
   readFileSync.returns('{}')
 
   sinon.stub(npm, 'getLastVersion', v => Promise.resolve(v.split('@').pop().slice(1)))
@@ -256,18 +265,9 @@ test('services - deploy all successfuly', t => {
     .returns(prepareDeployer('https://u4.sh'))
 
   fleet.data.servicesFlat = []
-  fleet.deployAll('directory', 'a=b&c=d')
+  fleet.getServices(pkg, 'directory', 'a=b&c=d')
     .then(() => {
       t.deepEqual(writeFileSyncArgs, {
-        'directory': {
-          name: 's1', version: '2',
-          services: { 's2': '^2', 's3': '^1' },
-          _services: {
-            's2': 'u8.sh',
-            's3': 'u3.sh'
-          },
-          _env: 'a=b&c=d'
-        },
         'directory/node_modules/s3': {
           _services: {
             's4': { version: '2', lastDeploy: 0 }
@@ -286,7 +286,8 @@ test('services - deploy all successfuly', t => {
       t.ok(run.getCall(2).calledWith('rm -r directory/node_modules/s4'), 'removed s4')
       t.end()
 
-      registry.getList.restore()
+      subscribe.restore()
+      get.restore()
       npm.getLastVersion.restore()
       npm.getServices.restore()
       fs.readFileSync.restore()
@@ -298,10 +299,6 @@ test('services - deploy all successfuly', t => {
 test('services - discover services', t => {
   const s4New = { name: 's4', version: '2', env: 'a=b&c=d', url: 'u11.sh', created: 12 }
   const s3New = { name: 's3', version: '1', env: 'a=b&c=d', url: 'u12.sh', created: 12 }
-
-  const getList = sinon.stub(registry, 'getList')
-  getList.onFirstCall().returns(Promise.resolve(deployments.concat(s4New)))
-  getList.onSecondCall().returns(Promise.resolve(deployments.concat(s4New, s3New)))
 
   var pkg = {
     _services: {
