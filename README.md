@@ -60,7 +60,7 @@ Another version of root service can't be a dependency of any service in the tree
 ## Service Discovery
 Each service should discover dependency urls on the boot time. This module provides a method for discovery.
 
-### discoverAll(pkg, delay)
+### getServices(pkg, delay)
 Discovers host names of dependencies defined in `package.json` by polling the latest deployed services from now API. Takes care of finding the host name for the right version of the dependency service.
 Second parameter is the delay in miliseconds between each polling from now API. It'll repeat until discovering all the deployments. 
 
@@ -69,7 +69,7 @@ const fleet = require('now-fleet').fleet
 
 const pkg = require('./package.json')
 
-fleet.discoverAll(pkg, 2000)
+fleet.getServices(pkg, 2000)
   .then(pkg => {
     // pkg._services object has all the host names
     // pkg._services.serviceC is something like url-sdfsd.now.sh
