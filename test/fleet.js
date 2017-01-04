@@ -228,41 +228,62 @@ test('services - deploy all successfuly', t => {
   const run = sinon.stub(command, 'run')
   run.returns(Promise.resolve())
 
-  function prepareDeployer (url) {
-    return {
+  const nowDeploy = sinon.stub(now, 'deployment')
+  const nowDeployment = nowDeploy.withArgs('NOW-TOKEN')
+
+  nowDeployment
+    .onFirstCall()
+    .returns({
       on (e, cb) {
-        if (e === 'deployed') {
-          setTimeout(cb, 0)
-        } else if (e === 'ready') {
-          setTimeout(cb, 100)
+        if (e !== 'error') {
+          setImmediate(cb)
         }
         return this
       },
-      url: {
-        compute () {
-          return url
+      deploy (dir, env) {
+        t.deepEqual(env, { a: 'b', c: 'd', REGISTRY_HOST: 'REGISTRY-HOST' }, 'deploys with right env')
+        t.equal(dir, path.join('directory', 'node_modules', 's3'), 'deploys s3 folder')
+        return this
+      },
+      get (key) {
+        return {
+          compute () {
+            return {
+              url: 'u3.sh',
+              id: 's3'
+            }[ key ]
+          }
         }
       },
-      deploy () {
+      set () {}
+    })
+
+  nowDeployment
+    .onSecondCall()
+    .returns({
+      on (e, cb) {
+        if (e !== 'error') {
+          setImmediate(cb)
+        }
         return this
-      }
-    }
-  }
-
-  const nowDeploy = sinon.stub(now, 'deploy')
-  nowDeploy
-    .withArgs('directory/node_modules/s3', {
-      a: 'b', c: 'd',
-      REGISTRY_HOST: 'REGISTRY-HOST'
-    }, 'NOW-TOKEN')
-    .returns(prepareDeployer('https://u3.sh'))
-
-  nowDeploy
-    .withArgs('directory/node_modules/s4', {
-      a: 'b', c: 'd',
-      REGISTRY_HOST: 'REGISTRY-HOST'
-    }, 'NOW-TOKEN')
-    .returns(prepareDeployer('https://u4.sh'))
+      },
+      deploy (dir, env) {
+        t.deepEqual(env, { a: 'b', c: 'd', REGISTRY_HOST: 'REGISTRY-HOST' }, 'deploys with right env')
+        t.equal(dir, path.join('directory', 'node_modules', 's4'), 'deploys s4 folder')
+        return this
+      },
+      get (key) {
+        return {
+          compute () {
+            return {
+              url: 'u4.sh',
+              id: 's4'
+            }[ key ]
+          }
+        }
+      },
+      set () {}
+    })
 
   fleet.data.servicesFlat = []
   fleet.getServices(pkg, 'directory', 'a=b&c=d')
@@ -293,6 +314,7 @@ test('services - deploy all successfuly', t => {
       fs.readFileSync.restore()
       fs.writeFileSync.restore()
       run.restore()
+      nowDeploy.restore()
     })
 })
 
